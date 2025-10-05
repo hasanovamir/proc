@@ -7,13 +7,14 @@ int main (int argc, char* argv[])
 {
     stack_t      stk  = {};
     parameters_t data = {};
+    int reg[16] =  {};
 
-    RETURN_IF_STACK_ERR (stack_init          (&stk, 100)     );
-    RETURN_IF_SPU_ERR   (allocation_com_arr  (&data, argv[1]));
-    RETURN_IF_SPU_ERR   (read_commands       (&data, argv[1]));
-    RETURN_IF_STACK_ERR (use_stack_func      (&data, &stk)   );
-    RETURN_IF_STACK_ERR (stack_destroy       (&stk)          );
-    RETURN_IF_SPU_ERR   (spu_destroy_com_arr (&data)         ); 
+    RETURN_IF_STACK_ERR (stack_init          (&stk, 100)       );
+    RETURN_IF_SPU_ERR   (allocation_com_arr  (&data, argv[1])  );
+    RETURN_IF_SPU_ERR   (read_commands       (&data, argv[1])  );
+    RETURN_IF_STACK_ERR (use_stack_func      (&data, &stk, reg));
+    RETURN_IF_STACK_ERR (stack_destroy       (&stk)            );
+    RETURN_IF_SPU_ERR   (spu_destroy_com_arr (&data)           ); 
 }
 
 //--------------------------------------------------------------------------------
@@ -58,7 +59,7 @@ spu_err_t read_commands (parameters_t* data, const char* title)
 
 //--------------------------------------------------------------------------------
 
-stack_err_t use_stack_func (parameters_t* data, stack_t* stk)
+stack_err_t use_stack_func (parameters_t* data, stack_t* stk, int* reg)
 {
     STACK_OK (stk);
 
@@ -77,7 +78,7 @@ stack_err_t use_stack_func (parameters_t* data, stack_t* stk)
             return STACK_UNKNOWN_ERR;
         }
 
-        switch ((operation_t)(data->com_arr[pos]))
+        switch ((data->com_arr[pos]))
         {
             case PUSH:
                 RETURN_IF_STACK_ERR (stack_push (stk, data->com_arr[++pos]));
@@ -125,9 +126,30 @@ stack_err_t use_stack_func (parameters_t* data, stack_t* stk)
                 pos++;
                 break;
             case HLT:
-                if (data->num_compl_com != data->com_arr[0] - 1)
+                data->num_compl_com++;
+                if (data->num_compl_com != data->com_arr[0])
                     printf ("WARNING, not all commands are completed");
                 return STACK_SUCCESS;
+            case IN:
+                scanf ("%d", &a);
+                RETURN_IF_STACK_ERR (stack_push (stk, a));
+                data->num_compl_com++;
+                pos++;
+                break;
+            case POPR:
+                RETURN_IF_STACK_ERR (stack_pop (stk, &a));
+                b = data->com_arr[++pos];
+                reg[b] = a;
+                data->num_compl_com++;
+                pos++;
+                break;
+            case PUSHR:
+                b = data->com_arr[++pos];
+                a = reg[b];
+                RETURN_IF_STACK_ERR (stack_push (stk, a));
+                data->num_compl_com++;
+                pos++;
+                break;
             default:
                 return STACK_SCAN_ERR;
         }
@@ -156,7 +178,6 @@ spu_err_t spu_destroy_com_arr (parameters_t* data)
     DEBUG_ASSERT (data->com_arr != NULL);
 
     free (data->com_arr);
-    data->num_el = 0;
 
     return SPU_SUCCESS;
 }

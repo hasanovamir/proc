@@ -81,6 +81,7 @@ error_t translator (parameters_t* data)
             data->num_com++;
 
             pos_el_arr += count;
+            continue;
         }
         else if (strcmp (tmp, "OUT") == 0)
         {
@@ -131,9 +132,46 @@ error_t translator (parameters_t* data)
             data->num_com++;
             pos_el_arr += 2;
         }
+        else if (strcmp (tmp, "IN") == 0)
+        {
+            data->com_array[pos_com_arr++] = 9;
+            data->num_com_arr_el++;
+            data->num_com++;
+            pos_el_arr += 2;
+        }
+        else if (strcmp (tmp, "POPR") == 0)
+        {
+            int a = 0;
+            sscanf (data->line_array[i] + 4, "%s", tmp);
+            a = convert_name_of_reg_to_num (tmp);
+            if (a == -1)
+            {
+                return ASM_ERR_UNKNOWN_REG_NAME;
+            }
+            data->com_array[pos_com_arr++] = 42;
+            data->com_array[pos_com_arr++] = a;
+            data->num_com_arr_el += 2;
+            data->num_com++;
+            pos_el_arr += 2;
+        }
+        else if (strcmp (tmp, "PUSHR") == 0)
+        {
+            int a = 0;
+            sscanf (data->line_array[i] + 5, "%s", tmp);
+            a = convert_name_of_reg_to_num (tmp);
+            if (a == -1)
+            {
+                return ASM_ERR_UNKNOWN_REG_NAME;
+            }
+            data->com_array[pos_com_arr++] = 33;
+            data->com_array[pos_com_arr++] = a;
+            data->num_com_arr_el += 2;
+            data->num_com++;
+            pos_el_arr += 2;
+        }
         else
         {
-            printf ("hueta\n");
+            printf ("UNKNOWN COMMAND\n");
 
             return ASM_ERR_INVALID_SCAN_SYM;
         }
@@ -183,3 +221,43 @@ error_t destroy_arrays (parameters_t* data)
 }
 
 //--------------------------------------------------------------------------------
+
+int convert_name_of_reg_to_num (char* name)
+{
+    DEBUG_ASSERT (name != NULL);
+
+    if (strcmp (name, "REG1") == 0)
+        return 1;
+    else if (strcmp (name, "REG2") == 0)
+        return 2;
+    else if (strcmp (name, "REG3") == 0)
+        return 3;
+    else if (strcmp (name, "REG4") == 0)
+        return 4;
+    else if (strcmp (name, "REG5") == 0)
+        return 5;
+    else if (strcmp (name, "REG6") == 0)
+        return 6;
+    else if (strcmp (name, "REG7") == 0)
+        return 7;
+    else if (strcmp (name, "REG8") == 0)
+        return 8;
+    else if (strcmp (name, "REG9") == 0)
+        return 9;
+    else if (strcmp (name, "REG10") == 0)
+        return 10;
+    else if (strcmp (name, "REG11") == 0)
+        return 11;
+    else if (strcmp (name, "REG12") == 0)
+        return 12;
+    else if (strcmp (name, "REG13") == 0)
+        return 13;
+    else if (strcmp (name, "REG14") == 0)
+        return 14;
+    else if (strcmp (name, "REG15") == 0)
+        return 15;
+    else if (strcmp (name, "REG16") == 0)
+        return 16;
+
+    return -1;
+}
