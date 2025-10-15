@@ -5,11 +5,12 @@
 
 spu_err_t read_commands (spu_context_t* spu_context, const char* file_name)
 {
-    DEBUG_ASSERT (spu_context          != NULL);
+    DEBUG_ASSERT (spu_context                != NULL);
     DEBUG_ASSERT (spu_context->command_array != NULL);
-    DEBUG_ASSERT (file_name            != NULL);
+    DEBUG_ASSERT (file_name                  != NULL);
 
     FILE* file = fopen (file_name, "rb");
+    
     if (file == NULL)
     {
         return SPU_OPEN_FILE_ERR;

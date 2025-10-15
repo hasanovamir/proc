@@ -38,6 +38,7 @@ spu_err_t allocation_command_array (spu_context_t* spu_context, const char* file
     }
 
     spu_context->command_array = (int*)calloc (spu_context->command_array_size, sizeof (int));
+
     if (spu_context->command_array == NULL)
     {
         fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
@@ -53,7 +54,7 @@ spu_err_t allocation_command_array (spu_context_t* spu_context, const char* file
 
 spu_err_t spu_destroy_command_array (spu_context_t* spu_context, stack_t* stk)
 {
-    DEBUG_ASSERT (spu_context          != NULL);
+    DEBUG_ASSERT (spu_context                != NULL);
     DEBUG_ASSERT (spu_context->command_array != NULL);
 
     stack_destroy  (stk);

@@ -4,14 +4,18 @@
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_push (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_push (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
+
     (*pos)++;
 
-    if (stack_push (stk, spu_context_t->command_array[*pos]) == STACK_ALLOCATION_ERR)
+    if (stack_push (stk, spu_context->command_array[*pos]) == STACK_ALLOCATION_ERR)
     {
         fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
             __FILE__, __LINE__, __PRETTY_FUNCTION__);
@@ -19,7 +23,7 @@ spu_err_t spu_push (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_
         return SPU_ALLOCATION_ERR;
     }
         
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
     
 
     return SPU_SUCCESS;
@@ -27,10 +31,14 @@ spu_err_t spu_push (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_out (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_out (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
+    DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int a = 0;
 
@@ -54,17 +62,21 @@ spu_err_t spu_out (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
 
     printf ("%d\n", a);
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_add (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_add (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
+    DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int a = 0, b = 0;
 
@@ -92,17 +104,21 @@ spu_err_t spu_add (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
         return SPU_ALLOCATION_ERR;
     }
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_sub (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_sub (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
+    DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int a = 0, b = 0;
 
@@ -130,17 +146,21 @@ spu_err_t spu_sub (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
         return SPU_ALLOCATION_ERR;
     }
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_div (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_div (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
+    DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int a = 0, b = 0;
 
@@ -168,17 +188,21 @@ spu_err_t spu_div (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
         return SPU_ALLOCATION_ERR;
     }
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_mul (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_mul (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
+    DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int a = 0, b = 0;
 
@@ -206,17 +230,21 @@ spu_err_t spu_mul (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
         return SPU_ALLOCATION_ERR;
     }
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_sqrt (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_sqrt (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
+    DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int a = 0;
 
@@ -238,17 +266,21 @@ spu_err_t spu_sqrt (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_
         return SPU_ALLOCATION_ERR;
     }
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_in (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_in (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
+    DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int a = 0;
 
@@ -262,18 +294,21 @@ spu_err_t spu_in (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t*
         return SPU_ALLOCATION_ERR;
     }
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_popr (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_popr (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
@@ -287,30 +322,33 @@ spu_err_t spu_popr (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_
         return SPU_ALLOCATION_ERR;
     }
 
-    b = spu_context_t->command_array[*pos];
+    b = spu_context->command_array[*pos];
     
-    regs[b] = a;
+    reg[b] = a;
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_pushr (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_pushr (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
     int a = 0, b = 0;
 
-    b = spu_context_t->command_array[*pos];
+    b = spu_context->command_array[*pos];
 
-    a = regs[b];
+    a = reg[b];
 
     if (stack_push (stk, a) == STACK_ALLOCATION_ERR)
     {
@@ -320,22 +358,25 @@ spu_err_t spu_pushr (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack
         return SPU_ALLOCATION_ERR;
     }
 
-    spu_context_t->num_completed_commands++;
+    spu_context->num_completed_commands++;
 
     return SPU_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_jmp (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_jmp (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     *pos = new_pos - 1; 
 
@@ -344,15 +385,18 @@ spu_err_t spu_jmp (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_je (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_je (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     int a = 0, b = 0;
 
@@ -382,15 +426,18 @@ spu_err_t spu_je (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t*
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_jne (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_jne (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     int a = 0, b = 0;
 
@@ -420,15 +467,18 @@ spu_err_t spu_jne (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_ja (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_ja (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     int a = 0, b = 0;
 
@@ -457,15 +507,18 @@ spu_err_t spu_ja (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t*
 }
 
 //--------------------------------------------------------------------------------
-spu_err_t spu_jae (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_jae (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     int a = 0, b = 0;
 
@@ -494,15 +547,18 @@ spu_err_t spu_jae (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
 }
 
 //--------------------------------------------------------------------------------
-spu_err_t spu_jb (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_jb (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     int a = 0, b = 0;
 
@@ -531,15 +587,18 @@ spu_err_t spu_jb (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t*
 }
 
 //--------------------------------------------------------------------------------
-spu_err_t spu_jbe (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_jbe (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
+    DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     int a = 0, b = 0;
 
@@ -569,18 +628,20 @@ spu_err_t spu_jbe (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_call (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_call (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
     DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     stack_push (return_labels, (*pos) + 2);
 
     (*pos)++;
 
-    int new_pos = spu_context_t->command_array[*pos];
+    int new_pos = spu_context->command_array[*pos];
 
     *pos = new_pos - 1; 
 
@@ -589,12 +650,14 @@ spu_err_t spu_call (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_ret (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_ret (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     DEBUG_ASSERT (stk           != NULL);
-    DEBUG_ASSERT (spu_context_t != NULL);
+    DEBUG_ASSERT (spu_context   != NULL);
     DEBUG_ASSERT (pos           != NULL);
     DEBUG_ASSERT (return_labels != NULL);
+    DEBUG_ASSERT (reg           != NULL);
+    DEBUG_ASSERT (spu_context->command_array != NULL);
 
     int new_pos = 0;
 
@@ -607,7 +670,7 @@ spu_err_t spu_ret (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_hlt (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs)
+spu_err_t spu_hlt (stack_t* stk, spu_context_t* spu_context, int* pos, stack_t* return_labels, int* reg)
 {
     return SPU_HLT;
 }

@@ -12,24 +12,24 @@ int main (int argc, char* argv[])
     if (spu_init (&spu_context, argv[1], &stk))
     {
         spu_destroy_command_array (&spu_context, &stk);
-        return 1;
+        return EXIT_FAILURE;
     }
 
     if (read_commands (&spu_context, argv[1]))
     {
         spu_destroy_command_array (&spu_context, &stk);
-        return 1;
+        return EXIT_FAILURE;
     }
 
     if (spu_execute_instructions (&spu_context, &stk, reg))
     {
         spu_destroy_command_array (&spu_context, &stk);
-        return 1;
+        return EXIT_FAILURE;
     }
 
     spu_destroy_command_array (&spu_context, &stk); 
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 //--------------------------------------------------------------------------------
