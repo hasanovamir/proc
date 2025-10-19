@@ -6,44 +6,44 @@ int main (int argc, char* argv[])
 {
     asm_context_t asm_context = {};
 
-    if (allocate_el_arr (&asm_context, argv[1]))
+    if (allocate_el_arr (&asm_context, argc, argv))
     {
-        destroy_arrays (&asm_context);
+        asm_destroy (&asm_context);
 
         return EXIT_FAILURE;
     }
 
-    if (read_commands (&asm_context, argv[1]))
+    if (read_source_code (&asm_context))
     {
-        destroy_arrays (&asm_context);
+        asm_destroy (&asm_context);
 
         return EXIT_FAILURE;
     }
 
     if (allocate_line_arr (&asm_context))
     {
-        destroy_arrays (&asm_context);
+        asm_destroy (&asm_context);
 
         return EXIT_FAILURE;
     }
 
-    if (allocate_com_arr (&asm_context))
+    if (allocate_bytecode_array (&asm_context))
     {
-        destroy_arrays (&asm_context);
+        asm_destroy (&asm_context);
 
         return EXIT_FAILURE;
     }
 
-    compile (&asm_context);
+    assemble (&asm_context);
 
-    if (write_commands (&asm_context, argv[2]))
+    if (write_bytecode (&asm_context))
     {
-        destroy_arrays (&asm_context);
+        asm_destroy (&asm_context);
 
         return EXIT_FAILURE;
     }
 
-    destroy_arrays (&asm_context);
+    asm_destroy (&asm_context);
 
     return EXIT_SUCCESS;
 }

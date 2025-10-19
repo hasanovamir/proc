@@ -3,413 +3,168 @@
 
 //--------------------------------------------------------------------------------
 
-void push_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
+void push_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation)
 {
+    DEBUG_ASSERT (asm_context                              != NULL);
+    DEBUG_ASSERT (asm_context->parsed_lines.line_array     != NULL);
+    DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
+
     int value = 0;
 
-    sscanf (asm_context->parsed_lines.line_array[i] + 4, "%d", &value);
+    long long offset = 1 + strchr (asm_context->parsed_lines.line_array[i], 'H') - asm_context->parsed_lines.line_array[i];
 
-    asm_context->bytecode_container.bytecode[(*pos)++] = 1;
+    sscanf (asm_context->parsed_lines.line_array[i] + offset, "%d", &value);
+
+    asm_context->bytecode_container.bytecode[(*pos)++] = PUSH;
+
     asm_context->bytecode_container.bytecode[(*pos)++] = value;
 
+    asm_context->bytecode_container.num_commands++;
+
     asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
 }
 
 //--------------------------------------------------------------------------------
 
-void out_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
+void reg_arg_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation)
 {
-    asm_context->bytecode_container.bytecode[(*pos)++] = 2;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
+    DEBUG_ASSERT (asm_context                              != NULL);
+    DEBUG_ASSERT (asm_context->parsed_lines.line_array     != NULL);
+    DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
 
-//--------------------------------------------------------------------------------
-
-void add_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    asm_context->bytecode_container.bytecode[(*pos)++] = 3;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-
-void sub_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    asm_context->bytecode_container.bytecode[(*pos)++] = 4;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void mul_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    asm_context->bytecode_container.bytecode[(*pos)++] = 5;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void div_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    asm_context->bytecode_container.bytecode[(*pos)++] = 6;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void sqrt_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    asm_context->bytecode_container.bytecode[(*pos)++] = 7;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void hlt_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    asm_context->bytecode_container.bytecode[(*pos)++] = 8;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void in_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    asm_context->bytecode_container.bytecode[(*pos)++] = 9;
-    asm_context->bytecode_container.num_bytecode_elements++;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void popr_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
     char tmp[10] = "";
 
-    sscanf (asm_context->parsed_lines.line_array[i] + 4, "%s", tmp);
+    int register_num = 0;
 
-    int num_reg = convert_reg_name_to_num (tmp);
-            
-    if (num_reg == -1)
+    long long offset = 1 + strchr (asm_context->parsed_lines.line_array[i], 'R') - asm_context->parsed_lines.line_array[i];
+    
+    int read_arg_count = sscanf (asm_context->parsed_lines.line_array[i] + offset, "%3s %d", tmp, &register_num);
+
+    if (strcmp (tmp, "REG") != 0 || read_arg_count != 2)
     {
-        fprintf (stderr, "%s:%d %s\nsegmentation fault\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
-        exit (1);
+        fprintf (stderr, "UNKNOWN COMMAND in %s:%d %s", __FILE__, __LINE__, __PRETTY_FUNCTION__);
     }
 
-    asm_context->bytecode_container.bytecode[(*pos)++] = 42;
-    asm_context->bytecode_container.bytecode[(*pos)++] = num_reg;
+    asm_context->bytecode_container.bytecode[(*pos)++] = operation;
+
+    asm_context->bytecode_container.bytecode[(*pos)++] = register_num;
+
+    asm_context->bytecode_container.num_commands++;
 
     asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
 }
 
 //--------------------------------------------------------------------------------
 
-void pushr_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
+void fill_labels (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation)
 {
-    char tmp[10] = "";
+    DEBUG_ASSERT (asm_context                              != NULL);
+    DEBUG_ASSERT (asm_context->parsed_lines.line_array     != NULL);
+    DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
 
-    sscanf (asm_context->parsed_lines.line_array[i] + 5, "%s", tmp);
-
-    int num_reg = convert_reg_name_to_num (tmp);
-            
-    if (num_reg == -1)
-    {
-        fprintf (stderr, "%s:%d %s\nsegmentation fault\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
-        exit (1);
-    }
-
-    asm_context->bytecode_container.bytecode[(*pos)++] = 33;
-    asm_context->bytecode_container.bytecode[(*pos)++] = num_reg;
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void jmp_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    if (asm_context->parsed_lines.line_array[i][4] == ':')
-    {
-        int input_label_num = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 5, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 10;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
-    }
-    else
-    {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 3, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 10;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
-    }
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void je_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    if (asm_context->parsed_lines.line_array[i][3] == ':')
-    {
-        int input_label_num = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 4, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 11;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
-    }
-    else
-    {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 3, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 11;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
-    }
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void jne_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    if (asm_context->parsed_lines.line_array[i][4] == ':')
-    {
-        int input_label_num = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 5, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 12;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
-    }
-    else
-    {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 3, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 12;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
-    }
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void ja_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    if (asm_context->parsed_lines.line_array[i][3] == ':')
-    {
-        int input_label_num = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 4, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 13;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
-    }
-    else
-    {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 3, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 13;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
-    }
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void jae_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    if (asm_context->parsed_lines.line_array[i][4] == ':')
-    {
-        int input_label_num = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 5, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 14;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
-    }
-    else
-    {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 3, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 14;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
-    }
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void jb_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    if (asm_context->parsed_lines.line_array[i][3] == ':')
-    {
-        int input_label_num = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 4, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 15;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
-    }
-    else
-    {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 3, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 15;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
-    }
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void jbe_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
-    if (asm_context->parsed_lines.line_array[i][4] == ':')
-    {
-        int input_label_num = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 5, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 16;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
-    }
-    else
-    {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 3, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 16;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
-    }
-
-    asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
-}
-
-//--------------------------------------------------------------------------------
-
-void fill_labels (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
-{
     int label_pos = 0;
     int label_num = 0;
 
-    sscanf (asm_context->parsed_lines.line_array[i] + 1, "%d", &label_num);
-            
-    label_pos = asm_context->bytecode_container.num_bytecode_elements;
+    long long offset = 1 + strchr (asm_context->parsed_lines.line_array[i], ':') - asm_context->parsed_lines.line_array[i];
 
-    labels[label_num - 1] = label_pos;
+    sscanf (asm_context->parsed_lines.line_array[i] + offset, "%d", &label_num);
+            
+    label_pos = asm_context->bytecode_container.num_bytecode_elements - 1;
+
+    asm_context->labels[label_num - 1] = label_pos;
 }
 
 //--------------------------------------------------------------------------------
 
-void call_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
+void upsize_fixup_list_if_need (asm_context_t* asm_context)
 {
-    if (asm_context->parsed_lines.line_array[i][5] == ':')
+    DEBUG_ASSERT (asm_context                              != NULL);
+    DEBUG_ASSERT (asm_context->fixup_list.fixup_table      != NULL);
+
+    if (asm_context->fixup_list.fixup_count == asm_context->fixup_list.fixup_capacity - 1)
     {
-        int input_label_num = 0;
+        asm_context->fixup_list.fixup_table = (fixup_t*)realloc (asm_context->fixup_list.fixup_table, asm_context->fixup_list.fixup_capacity * 2);
 
-        sscanf (asm_context->parsed_lines.line_array[i] + 6, "%d", &input_label_num);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 17;
-
-        fixup_list->fixup_table[fixup_list->fixup_count].index = *pos;
-        fixup_list->fixup_table[fixup_list->fixup_count++].label_num = input_label_num;
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = -1;
+        asm_context->fixup_list.fixup_capacity = asm_context->fixup_list.fixup_capacity * 2; 
     }
-    else
+}
+
+//--------------------------------------------------------------------------------
+
+void ram_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation)
+{
+    DEBUG_ASSERT (asm_context                              != NULL);
+    DEBUG_ASSERT (asm_context->parsed_lines.line_array     != NULL);
+    DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
+
+    char tmp[10] = "";
+
+    int register_num = 0;
+
+    char opening_bracket = 0, closing_bracket = 0;
+
+    long long offset = 1 + strchr (asm_context->parsed_lines.line_array[i], 'M') - asm_context->parsed_lines.line_array[i];
+    
+    sscanf (asm_context->parsed_lines.line_array[i] + offset + 1, "%c %3s %d %c", &opening_bracket, tmp, &register_num, &closing_bracket);
+
+    if (strcmp (tmp, "REG") != 0 || opening_bracket != '[' || closing_bracket != ']')
     {
-        int pos_to_jmp = 0;
-
-        sscanf (asm_context->parsed_lines.line_array[i] + 4, "%d", &pos_to_jmp);
-
-        asm_context->bytecode_container.bytecode[(*pos)++] = 17;
-        asm_context->bytecode_container.bytecode[(*pos)++] = pos_to_jmp;
+        fprintf (stderr, "UNKNOWN COMMAND in %s:%d %s", __FILE__, __LINE__, __PRETTY_FUNCTION__);
     }
+
+    asm_context->bytecode_container.bytecode[(*pos)++] = operation;
+
+    asm_context->bytecode_container.bytecode[(*pos)++] = register_num;
+
+    asm_context->bytecode_container.num_commands++;
 
     asm_context->bytecode_container.num_bytecode_elements += 2;
-    asm_context->bytecode_container.num_commands++;
 }
 
 //--------------------------------------------------------------------------------
 
-void ret_op (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
+void no_arg_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation)
 {
-    asm_context->bytecode_container.bytecode[(*pos)++] = 18;
+    DEBUG_ASSERT (asm_context                              != NULL);
+    DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
+
+    asm_context->bytecode_container.bytecode[(*pos)++] = operation;
+
+    asm_context->bytecode_container.num_commands++;
+
     asm_context->bytecode_container.num_bytecode_elements++;
+}
+
+//--------------------------------------------------------------------------------
+
+void jmp_core_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation)
+{
+    long long offset = 1 + strchr (asm_context->parsed_lines.line_array[i], ':') - asm_context->parsed_lines.line_array[i];
+    
+    int input_label_num = 0;
+
+    sscanf (asm_context->parsed_lines.line_array[i] + offset, "%d", &input_label_num);
+
+    asm_context->bytecode_container.bytecode[(*pos)++] = operation;
+
+    fill_fixup_list (asm_context, pos, input_label_num);
+
+    asm_context->bytecode_container.bytecode[(*pos)++] = -1;
+
+    asm_context->bytecode_container.num_bytecode_elements += 2;
+
     asm_context->bytecode_container.num_commands++;
 }
 
 //--------------------------------------------------------------------------------
 
-void skip_comment (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels)
+void fill_fixup_list (asm_context_t* asm_context, int* pos, int input_label_num)
 {
+    upsize_fixup_list_if_need (asm_context);
+
+    asm_context->fixup_list.fixup_table[asm_context->fixup_list.fixup_count].index = *pos;
+
+    asm_context->fixup_list.fixup_table[asm_context->fixup_list.fixup_count++].label_num = input_label_num;
 }
 
 //--------------------------------------------------------------------------------

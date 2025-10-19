@@ -1,13 +1,22 @@
 #include "assembler.h"
+#include "general_io_file_func.h"
 
 //--------------------------------------------------------------------------------
 
-error_t allocate_el_arr (asm_context_t* asm_context, const char* file_name)
+error_t allocate_el_arr (asm_context_t* asm_context, int argc, char** argv)
 {
     DEBUG_ASSERT (asm_context   != NULL);
-    DEBUG_ASSERT (file_name != NULL);
 
-    asm_context->source_buffer.buffer_size = get_file_size (file_name);
+    if (argc != 3)
+        return ASM_INCORRECT_FILE_NUM;
+
+    const char* read_file_name = argv[1];
+    const char* open_file_name = argv[2];
+
+    asm_context->read_file_name  = read_file_name;
+    asm_context->write_file_name = open_file_name;
+
+    asm_context->source_buffer.buffer_size = get_file_size (read_file_name);
 
     if (asm_context->source_buffer.buffer_size == -1)
     {
@@ -51,7 +60,7 @@ error_t allocate_line_arr (asm_context_t* asm_context)
 
 //--------------------------------------------------------------------------------
 
-error_t allocate_com_arr (asm_context_t* asm_context)
+error_t allocate_bytecode_array (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context != NULL);
 
@@ -63,6 +72,8 @@ error_t allocate_com_arr (asm_context_t* asm_context)
             __FILE__, __LINE__, __PRETTY_FUNCTION__);
         return ASM_ERR_ALLOCATION;
     }
+
+    memset (asm_context->labels, -1, labels_size * sizeof (int));
 
     return ASM_SUCCESS;
 }
@@ -113,7 +124,7 @@ error_t fill_line_array (asm_context_t* asm_context)
 
 //--------------------------------------------------------------------------------
 
-error_t destroy_arrays (asm_context_t* asm_context)
+error_t asm_destroy (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context                               != NULL);
     DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);

@@ -7,6 +7,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <ctype.h>
+#include <stdbool.h>
+
+//————————————————————————————————————————————————————————————————————————————————
+
+typedef int spu_data_t;
+
+const int fixup_array_size = 20;
+
+const int labels_size = 20;
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -35,15 +45,6 @@ struct bytecode_container_t
 
 //————————————————————————————————————————————————————————————————————————————————
 
-struct asm_context_t
-{
-    buffer_t             source_buffer;
-    line_arr_t           parsed_lines;
-    bytecode_container_t bytecode_container;
-};
-
-//————————————————————————————————————————————————————————————————————————————————
-
 struct fixup_t
 {
     int index;
@@ -56,6 +57,20 @@ struct fixup_list_t
 {
     fixup_t* fixup_table;
     int   fixup_count;
+    int   fixup_capacity;
+};
+
+//————————————————————————————————————————————————————————————————————————————————
+
+struct asm_context_t
+{
+    buffer_t             source_buffer;
+    line_arr_t           parsed_lines;
+    bytecode_container_t bytecode_container;
+    fixup_list_t         fixup_list;
+    int                  labels[labels_size];
+    const char*          read_file_name;
+    const char*          write_file_name;
 };
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -70,35 +85,40 @@ typedef enum
     ASM_ERR_INVALID_SCAN_SYM = 5,
     ASM_ERR_OPEN_WRITE_FILE  = 6,
     ASM_ERR_UNKNOWN_REG_NAME = 7,
+    ASM_INCORRECT_FILE_NUM   = 8,
 } error_t;
 
 //————————————————————————————————————————————————————————————————————————————————
 
 typedef enum
 {
-    ERR   =  0,
-    PUSH  =  1,
-    OUT   =  2,
-    ADD   =  3,
-    SUB   =  4,
-    MUL   =  5,
-    DIV   =  6,
-    SQRT  =  7,
-    HLT   =  8,
-    IN    =  9,
-    PUSHR = 33,
-    POPR  = 42,
-    JMP   = 10,
-    JE    = 11,
-    JNE   = 12,
-    JA    = 13,
-    JAE   = 14,
-    JB    = 15,
-    JBE   = 16,
-    CALL  = 17,
-    RET   = 18,
-    FILL_LABELS = 19,
-    COMMENT = 20,
+    ERR   = -1,
+    PUSH  =  0,
+    OUT   =  1,
+    ADD   =  2,
+    SUB   =  3,
+    MUL   =  4,
+    DIV   =  5,
+    SQRT  =  6,
+    HLT   =  7,
+    IN    =  8,
+    JMP   =  9,
+    JE    = 10,
+    JNE   = 11,
+    JA    = 12,
+    JAE   = 13,
+    JB    = 14,
+    JBE   = 15,
+    CALL  = 16,
+    RET   = 17,
+    PUSHR = 18,
+    POPR  = 19,
+    PUSHM = 20,
+    POPM  = 21,
+    DRAW  = 22,
+    MEOW  = 23,
+    FILL_LABELS,
+    FUNC_COUNT,
 } asm_operation_t;
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -134,46 +154,89 @@ struct oper_name_and_idx_t
 
 //————————————————————————————————————————————————————————————————————————————————
 
-registers_t     convert_reg_name_to_num (char* name            );
-const char*     error_code_to_string    (error_t status        );
-int             get_file_size           (const char* file_name );
-asm_operation_t get_oper_idx            (const char* input_oper);
-error_t         allocate_line_arr       (asm_context_t* asm_context);
-error_t         count_n_lines           (asm_context_t* asm_context);
-error_t         fill_line_array         (asm_context_t* asm_context);
-void            compile                 (asm_context_t* asm_context);
-error_t         destroy_arrays          (asm_context_t* asm_context);
-error_t         allocate_com_arr        (asm_context_t* asm_context);
-error_t         allocate_el_arr         (asm_context_t* asm_context, const char* file_name);
-error_t         read_commands           (asm_context_t* asm_context, const char* file_name);
-error_t         write_commands          (asm_context_t* asm_context, const char* file_name);
-void            fixup_labels            (asm_context_t* asm_context, fixup_list_t* fixup_list, int* labels);
-void            fill_operation_table    (void (** operations_table)(asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels));
+const oper_name_and_idx_t oper_name_and_idx[] = 
+{
+    {"PUSH" , PUSH },
+    {"OUT"  , OUT  },
+    {"ADD"  , ADD  },
+    {"SUB"  , SUB  },
+    {"MUL"  , MUL  },
+    {"DIV"  , DIV  },
+    {"SQRT" , SQRT },
+    {"HLT"  , HLT  },
+    {"IN"   , IN   },
+    {"JMP"  , JMP  },
+    {"JE"   , JE   },
+    {"JNE"  , JNE  },
+    {"JA"   , JA   },
+    {"JAE"  , JAE  },
+    {"JB"   , JB   },
+    {"JBE"  , JBE  },
+    {"CALL" , CALL },
+    {"RET"  , RET  },
+    {"PUSHR", PUSHR},
+    {"POPR" , POPR },
+    {"PUSHM", PUSHM},
+    {"POPM" , POPM },
+    {"DRAW" , DRAW },
+    {"MEOW" , MEOW }
+};
 
 //————————————————————————————————————————————————————————————————————————————————
 
-void out_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void add_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void sub_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void mul_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void div_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void sqrt_op      (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void hlt_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void in_op        (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void ret_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void push_op      (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void popr_op      (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void pushr_op     (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void fill_labels  (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void jmp_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void je_op        (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void jne_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void jb_op        (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void jbe_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void ja_op        (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void jae_op       (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void call_op      (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
-void skip_comment (asm_context_t* asm_context, int* pos, int i, fixup_list_t* fixup_list, int*labels);
+const char*     error_code_to_string      (error_t status            );
+asm_operation_t get_oper_idx              (const char* input_oper    );
+error_t         allocate_line_arr         (asm_context_t* asm_context);
+error_t         count_n_lines             (asm_context_t* asm_context);
+error_t         fill_line_array           (asm_context_t* asm_context);
+void            assemble                  (asm_context_t* asm_context);
+error_t         asm_destroy               (asm_context_t* asm_context);
+error_t         allocate_bytecode_array   (asm_context_t* asm_context);
+error_t         read_source_code             (asm_context_t* asm_context);
+error_t         write_bytecode            (asm_context_t* asm_context);
+void            fixup_labels              (asm_context_t* asm_context);
+void            upsize_fixup_list_if_need (asm_context_t* asm_context);
+int             check_is_line_empty       (asm_context_t* asm_context, int i);
+error_t         allocate_el_arr           (asm_context_t* asm_context, int argc, char** argv);
+
+//————————————————————————————————————————————————————————————————————————————————
+
+void push_op         (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void fill_labels     (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void ram_op          (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void no_arg_op       (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void reg_arg_op      (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void jmp_core_op     (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void fill_fixup_list (asm_context_t* asm_context, int* pos, int input_label_num             );
+
+//————————————————————————————————————————————————————————————————————————————————
+
+void (* const operations_table[FUNC_COUNT])(asm_context_t* asm_context, int* pos, int i, asm_operation_t operation) = 
+    {   [PUSH]        = &push_op,
+        [OUT]         = &no_arg_op,
+        [ADD]         = &no_arg_op,
+        [SUB]         = &no_arg_op,
+        [MUL]         = &no_arg_op,
+        [DIV]         = &no_arg_op,
+        [SQRT]        = &no_arg_op,
+        [HLT]         = &no_arg_op,
+        [IN]          = &no_arg_op,
+        [JMP]         = &jmp_core_op,
+        [JE]          = &jmp_core_op,
+        [JNE]         = &jmp_core_op,
+        [JA]          = &jmp_core_op,
+        [JAE]         = &jmp_core_op,
+        [JB]          = &jmp_core_op,
+        [JBE]         = &jmp_core_op,
+        [CALL]        = &jmp_core_op,
+        [RET]         = &no_arg_op,
+        [PUSHR]       = &reg_arg_op,
+        [POPR]        = &reg_arg_op,
+        [PUSHM]       = &ram_op,
+        [POPM]        = &ram_op,
+        [DRAW]        = &no_arg_op,
+        [MEOW]        = &no_arg_op,
+        [FILL_LABELS] = &fill_labels   };
 
 //————————————————————————————————————————————————————————————————————————————————
 

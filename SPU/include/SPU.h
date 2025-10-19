@@ -1,39 +1,72 @@
 #ifndef SPU_h
-#define SPU_h
+#define SPU_h // make spu damp
+
+//————————————————————————————————————————————————————————————————————————————————
+
+#define COLOR_RED     "\033[31m"
+#define COLOR_GREEN   "\033[32m"
+#define COLOR_RESET   "\033[0m"
+
+//————————————————————————————————————————————————————————————————————————————————
+
+const int spu_stack_size = 100;
+
+const int spu_ret_labels_stack_size = 20;
+
+typedef stack_val_t spu_data_t;
+
+const int reg_capacity = 16;
+
+const int ram_size = 441;
 
 //————————————————————————————————————————————————————————————————————————————————
 
 struct spu_context_t
 {
-    int  command_array_size;
-    int  num_completed_commands;
-    int* command_array;
+    int         bytecode_size;
+    int         num_completed_commands;
+
+    spu_data_t* bytecode;
+
+    stack_t     stk;
+    stack_t     return_labels;
+
+    const char* file_name;
+
+    int         reg[reg_capacity];
+    
+    spu_data_t* ram;
 };
 
 //————————————————————————————————————————————————————————————————————————————————
 
 typedef enum
 {
-    PUSH  =  1,
-    OUT   =  2,
-    ADD   =  3,
-    SUB   =  4,
-    MUL   =  5,
-    DIV   =  6,
-    SQRT  =  7,
-    HLT   =  8,
-    IN    =  9,
-    PUSHR = 33,
-    POPR  = 42,
-    JMP   = 10,
-    JE    = 11,
-    JNE   = 12,
-    JA    = 13,
-    JAE   = 14,
-    JB    = 15,
-    JBE   = 16, 
-    CALL  = 17,
-    RET   = 18,
+    PUSH  =  0,
+    OUT   =  1,
+    ADD   =  2,
+    SUB   =  3,
+    MUL   =  4,
+    DIV   =  5,
+    SQRT  =  6,
+    HLT   =  7,
+    IN    =  8,
+    JMP   =  9,
+    JE    = 10,
+    JNE   = 11,
+    JA    = 12,
+    JAE   = 13,
+    JB    = 14,
+    JBE   = 15, 
+    CALL  = 16,
+    RET   = 17,
+    PUSHR = 18,
+    POPR  = 19,
+    PUSHM = 20,
+    POPM  = 21,
+    DRAW  = 22,
+    MEOW  = 23,
+    FUNC_COUNT,
 } spu_operation_t;
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -47,43 +80,105 @@ typedef enum
     SPU_LACK_OF_HALT   = 4,
     SPU_SCAN_ERR       = 5,
     SPU_NO_EL_TO_POP   = 6,
-    SPU_HLT            = 7,
+    SPU_LACK_OF_FILE   = 7,
+    SPU_INCORRECT_FILE_SIZE = 8,
 } spu_err_t;
 
 //————————————————————————————————————————————————————————————————————————————————
 
-spu_err_t   allocation_command_array  (spu_context_t* spu_context, const char* title     );
-spu_err_t   read_commands             (spu_context_t* spu_context, const char* title     );
-spu_err_t   spu_execute_instructions  (spu_context_t* spu_context, stack_t* stk,int* reg );
-const char* error_spu_code_to_string  (spu_err_t status                                  );
-spu_err_t   spu_destroy_command_array (spu_context_t* spu_context, stack_t* stk          );
-int         get_file_size             (const char* file_name                             );
-spu_err_t   spu_init                  (spu_context_t* spu_context, const char* title, stack_t* stk);
-void        fill_command_table        (spu_err_t (** commands_table)(stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels));
+spu_err_t   allocate_bytecode_array   (spu_context_t* spu_context);
+spu_err_t   read_bytecode             (spu_context_t* spu_context);
+spu_err_t   spu_execute_instructions  (spu_context_t* spu_context);
+const char* error_spu_code_to_string  (spu_err_t status          );
+spu_err_t   spu_destroy               (spu_context_t* spu_context);
+spu_err_t   spu_init                  (spu_context_t* spu_context, int argc, char** argv);
 
 //————————————————————————————————————————————————————————————————————————————————
 
-spu_err_t   spu_pop   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_out   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_in    (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_add   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_sub   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_div   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_mul   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_sqrt  (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_push  (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_jmp   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_je    (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_jne   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_ja    (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_jae   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_jb    (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_jbe   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_pushr (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_popr  (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_call  (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_ret   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
-spu_err_t   spu_hlt   (stack_t* stk, spu_context_t* spu_context_t, int* pos, stack_t* return_labels, int* regs);
+spu_err_t spu_out   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_in    (spu_context_t* spu_context, int* pos);
+spu_err_t spu_add   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_sub   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_div   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_mul   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_sqrt  (spu_context_t* spu_context, int* pos);
+spu_err_t spu_push  (spu_context_t* spu_context, int* pos);
+spu_err_t spu_jmp   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_je    (spu_context_t* spu_context, int* pos);
+spu_err_t spu_jne   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_ja    (spu_context_t* spu_context, int* pos);
+spu_err_t spu_jae   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_jb    (spu_context_t* spu_context, int* pos);
+spu_err_t spu_jbe   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_pushr (spu_context_t* spu_context, int* pos);
+spu_err_t spu_popr  (spu_context_t* spu_context, int* pos);
+spu_err_t spu_call  (spu_context_t* spu_context, int* pos);
+spu_err_t spu_ret   (spu_context_t* spu_context, int* pos);
+spu_err_t spu_pushm (spu_context_t* spu_context, int* pos);
+spu_err_t spu_popm  (spu_context_t* spu_context, int* pos);
+spu_err_t spu_draw  (spu_context_t* spu_context, int* pos);
+spu_err_t spu_meow  (spu_context_t* spu_context, int* pos);
+
+//————————————————————————————————————————————————————————————————————————————————
+
+spu_err_t (* const commands_table[FUNC_COUNT])(spu_context_t* spu_context_t, int* pos) = 
+    {   [PUSH]    = &spu_push,
+        [OUT]     = &spu_out,
+        [ADD]     = &spu_add,
+        [SUB]     = &spu_sub,
+        [MUL]     = &spu_mul,
+        [DIV]     = &spu_div,
+        [SQRT]    = &spu_sqrt,
+        [HLT]     = NULL,
+        [IN]      = &spu_in,
+        [JMP]     = &spu_jmp,
+        [JE]      = &spu_je,
+        [JNE]     = &spu_jne,
+        [JA]      = &spu_ja,
+        [JAE]     = &spu_jae,
+        [JB]      = &spu_jb,
+        [JBE]     = &spu_jbe,
+        [CALL]    = &spu_call,
+        [RET]     = &spu_ret,
+        [PUSHR]   = &spu_pushr,
+        [POPR]    = &spu_popr,
+        [PUSHM]   = &spu_pushm,
+        [POPM]    = &spu_popm,
+        [DRAW]    = &spu_draw,
+        [MEOW]    = &spu_meow   };
+
+//————————————————————————————————————————————————————————————————————————————————
+
+#define PRINTERR(str)\
+fprintf (stderr, "%s in %s:%d in %s", #str, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+
+//————————————————————————————————————————————————————————————————————————————————
+
+#define POP_TWICE(pointer_1, pointer_2, stk)\
+if (stack_pop (stk, pointer_1) == STACK_ALLOCATION_ERR)\
+    {\
+        PRINTERR (SPU_ALLOCATION_ERR);\
+        return SPU_ALLOCATION_ERR;\
+    }\
+    if (stack_pop (stk, pointer_2) == STACK_ALLOCATION_ERR)\
+    {\
+        PRINTERR (SPU_ALLOCATION_ERR);\
+        return SPU_ALLOCATION_ERR;\
+    }
+
+//————————————————————————————————————————————————————————————————————————————————
+
+#define PUSH_TWICE(pointer_1, pointer_2, stk)\
+if (stack_pop (stk, pointer_1) == STACK_ALLOCATION_ERR)\
+    {\
+        PRINTERR (SPU_ALLOCATION_ERR);\
+        return SPU_ALLOCATION_ERR;\
+    }\
+    if (stack_pop (stk, pointer_2) == STACK_ALLOCATION_ERR)\
+    {\
+        PRINTERR (SPU_ALLOCATION_ERR);\
+        return SPU_ALLOCATION_ERR;\
+    }
 
 //————————————————————————————————————————————————————————————————————————————————
 
