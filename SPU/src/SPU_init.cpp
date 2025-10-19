@@ -1,48 +1,42 @@
 #include "stack.h"
 #include "SPU.h"
+#include "general_io_file_func.h"
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_init (spu_context_t* spu_context, const char* file_name, stack_t* stk)
+spu_err_t spu_init (spu_context_t* spu_context, int argc, char** argv)
 {
     DEBUG_ASSERT (spu_context != NULL);
-    DEBUG_ASSERT (file_name   != NULL);
-    DEBUG_ASSERT (stk         != NULL);
 
-    if (stack_init (stk, 100))
+    if (argc == 1)
+    {
+        PRINTERR (SPU_LACK_OF_FILE);
+
+        return SPU_LACK_OF_FILE;
+    }
+
+    spu_context->file_name = argv[1];
+
+    if (stack_init (&spu_context->stk, spu_stack_size))
     {   
         return SPU_ALLOCATION_ERR;
     }
 
-    if (allocation_command_array (spu_context, file_name))
+    if (stack_init (&spu_context->return_labels, spu_ret_labels_stack_size))
+    {   
+        return SPU_ALLOCATION_ERR;
+    }
+
+    if (allocate_bytecode_array (spu_context))
     {
         return SPU_ALLOCATION_ERR;   
     }
 
-    return SPU_SUCCESS;
-}
+    spu_context->ram = (spu_data_t*)calloc (ram_size, sizeof (spu_data_t));
 
-//--------------------------------------------------------------------------------
-
-spu_err_t allocation_command_array (spu_context_t* spu_context, const char* file_name)
-{
-    DEBUG_ASSERT (spu_context != NULL);
-    DEBUG_ASSERT (file_name   != NULL);
-
-    
-    spu_context->command_array_size = get_file_size (file_name) / 4;
-
-    if (spu_context->command_array_size == -1)
+    if (spu_context->ram == NULL)
     {
-        return SPU_OPEN_FILE_ERR;
-    }
-
-    spu_context->command_array = (int*)calloc (spu_context->command_array_size, sizeof (int));
-
-    if (spu_context->command_array == NULL)
-    {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -52,13 +46,50 @@ spu_err_t allocation_command_array (spu_context_t* spu_context, const char* file
 
 //--------------------------------------------------------------------------------
 
-spu_err_t spu_destroy_command_array (spu_context_t* spu_context, stack_t* stk)
+spu_err_t allocate_bytecode_array (spu_context_t* spu_context)
+{
+    DEBUG_ASSERT (spu_context != NULL);
+ 
+    spu_context->bytecode_size = get_file_size (spu_context->file_name);
+
+    if ((spu_context->bytecode_size % 4) != 0)
+    {
+        PRINTERR (SPU_INCORRECT_FILE_SIZE);
+
+        return SPU_INCORRECT_FILE_SIZE;
+    } 
+
+    spu_context->bytecode_size /= sizeof (spu_data_t);
+
+    if (spu_context->bytecode_size == -1)
+    {
+        PRINTERR (SPU_OPEN_FILE_ERR);
+
+        return SPU_OPEN_FILE_ERR;
+    }
+
+    spu_context->bytecode = (spu_data_t*)calloc (spu_context->bytecode_size, sizeof (spu_data_t));
+
+    if (spu_context->bytecode == NULL)
+    {
+        PRINTERR (SPU_ALLOCATION_ERR);
+
+        return SPU_ALLOCATION_ERR;
+    }
+
+    return SPU_SUCCESS;
+}
+
+//--------------------------------------------------------------------------------
+
+spu_err_t spu_destroy (spu_context_t* spu_context)
 {
     DEBUG_ASSERT (spu_context                != NULL);
-    DEBUG_ASSERT (spu_context->command_array != NULL);
+    DEBUG_ASSERT (spu_context->bytecode != NULL);
 
-    stack_destroy  (stk);
-    free (spu_context->command_array);
+    stack_destroy (&spu_context->stk);
+    free          (spu_context->bytecode);
+    free          (spu_context->ram);
 
     return SPU_SUCCESS;
 }

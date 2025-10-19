@@ -5,29 +5,27 @@
 
 int main (int argc, char* argv[])
 {
-    stack_t stk = {};
     spu_context_t spu_context = {};
-    int reg[16] = {};
 
-    if (spu_init (&spu_context, argv[1], &stk))
+    if (spu_init (&spu_context, argc, argv))
     {
-        spu_destroy_command_array (&spu_context, &stk);
+        spu_destroy (&spu_context);
         return EXIT_FAILURE;
     }
 
-    if (read_commands (&spu_context, argv[1]))
+    if (read_bytecode (&spu_context))
     {
-        spu_destroy_command_array (&spu_context, &stk);
+        spu_destroy (&spu_context);
         return EXIT_FAILURE;
     }
 
-    if (spu_execute_instructions (&spu_context, &stk, reg))
+    if (spu_execute_instructions (&spu_context))
     {
-        spu_destroy_command_array (&spu_context, &stk);
+        spu_destroy (&spu_context);
         return EXIT_FAILURE;
     }
 
-    spu_destroy_command_array (&spu_context, &stk); 
+    spu_destroy (&spu_context); 
 
     return EXIT_SUCCESS;
 }

@@ -3,52 +3,32 @@
 
 //--------------------------------------------------------------------------------
 
-spu_err_t read_commands (spu_context_t* spu_context, const char* file_name)
+spu_err_t read_bytecode (spu_context_t* spu_context)
 {
     DEBUG_ASSERT (spu_context                != NULL);
-    DEBUG_ASSERT (spu_context->command_array != NULL);
-    DEBUG_ASSERT (file_name                  != NULL);
+    DEBUG_ASSERT (spu_context->bytecode != NULL);
 
-    FILE* file = fopen (file_name, "rb");
+    FILE* file = fopen (spu_context->file_name, "rb");
     
     if (file == NULL)
     {
+        PRINTERR (SPU_OPEN_FILE_ERR);
+   
         return SPU_OPEN_FILE_ERR;
     }
 
-    int read_size = fread (spu_context->command_array, sizeof (int), spu_context->command_array_size, file);
+    int read_size = (int)fread (spu_context->bytecode, sizeof (spu_data_t), spu_context->bytecode_size, file);
 
-    if (spu_context->command_array_size != read_size)
+    if (spu_context->bytecode_size != read_size)
     {
-        fprintf(stderr, "SPU_FREAD_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_FREAD_ERR);
+
         return SPU_FREAD_ERR;
     }
 
     fclose (file);
 
     return SPU_SUCCESS;
-}
-
-//--------------------------------------------------------------------------------
-
-int get_file_size (const char* file_name)
-{
-    DEBUG_ASSERT (file_name != NULL);
-
-    struct stat statistic = {};
-    stat (file_name, &statistic);
-
-    int file_size = statistic.st_size;
-    
-    if (file_size == 0)
-    {
-        fprintf(stderr, "ERR_get_file_size in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
-        return -1;
-    }
-
-    return file_size;
 }
 
 //--------------------------------------------------------------------------------
