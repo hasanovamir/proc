@@ -139,6 +139,10 @@ void no_arg_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t ope
 
 void jmp_core_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation)
 {
+    DEBUG_ASSERT (asm_context                              != NULL);
+    DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
+    DEBUG_ASSERT (asm_context->parsed_lines.line_array     != NULL);
+
     long long offset = 1 + strchr (asm_context->parsed_lines.line_array[i], ':') - asm_context->parsed_lines.line_array[i];
     
     int input_label_num = 0;
@@ -160,6 +164,9 @@ void jmp_core_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t o
 
 void fill_fixup_list (asm_context_t* asm_context, int* pos, int input_label_num)
 {
+    DEBUG_ASSERT (asm_context                         != NULL);
+    DEBUG_ASSERT (asm_context->fixup_list.fixup_table != NULL);
+
     upsize_fixup_list_if_need (asm_context);
 
     asm_context->fixup_list.fixup_table[asm_context->fixup_list.fixup_count].index = *pos;

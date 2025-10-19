@@ -5,7 +5,7 @@
 
 error_t allocate_el_arr (asm_context_t* asm_context, int argc, char** argv)
 {
-    DEBUG_ASSERT (asm_context   != NULL);
+    DEBUG_ASSERT (asm_context != NULL);
 
     if (argc != 3)
         return ASM_INCORRECT_FILE_NUM;
@@ -108,7 +108,7 @@ error_t count_n_lines (asm_context_t* asm_context)
 
 error_t fill_line_array (asm_context_t* asm_context)
 {
-    DEBUG_ASSERT (asm_context                           != NULL);
+    DEBUG_ASSERT (asm_context                          != NULL);
     DEBUG_ASSERT (asm_context->parsed_lines.line_array != NULL);
 
     char* tmp = asm_context->source_buffer.source_code_array;
@@ -126,10 +126,10 @@ error_t fill_line_array (asm_context_t* asm_context)
 
 error_t asm_destroy (asm_context_t* asm_context)
 {
-    DEBUG_ASSERT (asm_context                               != NULL);
-    DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
-    DEBUG_ASSERT (asm_context->parsed_lines.line_array     != NULL);
-    DEBUG_ASSERT (asm_context->source_buffer.source_code_array  != NULL);
+    DEBUG_ASSERT (asm_context                                  != NULL);
+    DEBUG_ASSERT (asm_context->bytecode_container.bytecode     != NULL);
+    DEBUG_ASSERT (asm_context->parsed_lines.line_array         != NULL);
+    DEBUG_ASSERT (asm_context->source_buffer.source_code_array != NULL);
 
     free (asm_context->bytecode_container.bytecode);
     free (asm_context->parsed_lines.line_array    );

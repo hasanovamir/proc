@@ -5,7 +5,7 @@
 
 spu_err_t read_bytecode (spu_context_t* spu_context)
 {
-    DEBUG_ASSERT (spu_context                != NULL);
+    DEBUG_ASSERT (spu_context           != NULL);
     DEBUG_ASSERT (spu_context->bytecode != NULL);
 
     FILE* file = fopen (spu_context->file_name, "rb");

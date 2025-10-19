@@ -39,7 +39,7 @@ error_t read_source_code (asm_context_t* asm_context)
 
 error_t write_bytecode (asm_context_t* asm_context)
 {
-    DEBUG_ASSERT (asm_context  != 0);
+    DEBUG_ASSERT (asm_context != 0);
 
     const char* file_name = asm_context->write_file_name;
     

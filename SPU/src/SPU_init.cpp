@@ -84,7 +84,7 @@ spu_err_t allocate_bytecode_array (spu_context_t* spu_context)
 
 spu_err_t spu_destroy (spu_context_t* spu_context)
 {
-    DEBUG_ASSERT (spu_context                != NULL);
+    DEBUG_ASSERT (spu_context           != NULL);
     DEBUG_ASSERT (spu_context->bytecode != NULL);
 
     stack_destroy (&spu_context->stk);
