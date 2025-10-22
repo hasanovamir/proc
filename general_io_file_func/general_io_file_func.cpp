@@ -2,14 +2,14 @@
 
 //--------------------------------------------------------------------------------
 
-int get_file_size (const char* file_name)
+long long int get_file_size (const char* file_name)
 {
     DEBUG_ASSERT (file_name != NULL);
 
     struct stat statistic = {};
     stat (file_name, &statistic);
 
-    int file_size = statistic.st_size;
+    long long int file_size = statistic.st_size;
     
     if (file_size == 0)
     {

@@ -3,12 +3,16 @@
 
 //--------------------------------------------------------------------------------
 
-error_t allocate_el_arr (asm_context_t* asm_context, int argc, char** argv)
+asm_error_t allocate_el_arr (asm_context_t* asm_context, int argc, char** argv)
 {
     DEBUG_ASSERT (asm_context != NULL);
 
     if (argc != 3)
-        return ASM_INCORRECT_FILE_NUM;
+    {
+        PRINTERR (ASM_INCORRECT_FILE_NAME);
+
+        return ASM_INCORRECT_FILE_NAME;
+    }
 
     const char* read_file_name = argv[1];
     const char* open_file_name = argv[2];
@@ -20,6 +24,8 @@ error_t allocate_el_arr (asm_context_t* asm_context, int argc, char** argv)
 
     if (asm_context->source_buffer.buffer_size == -1)
     {
+        PRINTERR (ASM_ERR_OPEN_READ_FILE);
+
         return ASM_ERR_OPEN_READ_FILE;
     }
 
@@ -27,8 +33,8 @@ error_t allocate_el_arr (asm_context_t* asm_context, int argc, char** argv)
 
     if (asm_context->source_buffer.source_code_array == NULL)
     {
-        fprintf(stderr, "ASM_ERR_ALLOCATION in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (ASM_ERR_ALLOCATION);
+
         return ASM_ERR_ALLOCATION;
     }
 
@@ -39,7 +45,7 @@ error_t allocate_el_arr (asm_context_t* asm_context, int argc, char** argv)
 
 //--------------------------------------------------------------------------------
 
-error_t allocate_line_arr (asm_context_t* asm_context)
+asm_error_t allocate_line_arr (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context                                  != NULL);
     DEBUG_ASSERT (asm_context->source_buffer.source_code_array != NULL);
@@ -48,8 +54,8 @@ error_t allocate_line_arr (asm_context_t* asm_context)
 
     if (asm_context->parsed_lines.line_array == NULL)
     {
-        fprintf(stderr, "ASM_ERR_ALLOCATION in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (ASM_ERR_ALLOCATION);
+
         return ASM_ERR_ALLOCATION;
     }
 
@@ -60,7 +66,7 @@ error_t allocate_line_arr (asm_context_t* asm_context)
 
 //--------------------------------------------------------------------------------
 
-error_t allocate_bytecode_array (asm_context_t* asm_context)
+asm_error_t allocate_bytecode_array (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context != NULL);
 
@@ -68,8 +74,8 @@ error_t allocate_bytecode_array (asm_context_t* asm_context)
 
     if (asm_context->bytecode_container.bytecode == NULL)
     {
-        fprintf(stderr, "ASM_ERR_ALLOCATION in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (ASM_ERR_ALLOCATION);
+        
         return ASM_ERR_ALLOCATION;
     }
 
@@ -80,7 +86,7 @@ error_t allocate_bytecode_array (asm_context_t* asm_context)
 
 //--------------------------------------------------------------------------------
 
-error_t count_n_lines (asm_context_t* asm_context)
+asm_error_t count_n_lines (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context                                  != NULL);
     DEBUG_ASSERT (asm_context->source_buffer.source_code_array != NULL);
@@ -106,7 +112,7 @@ error_t count_n_lines (asm_context_t* asm_context)
 
 //--------------------------------------------------------------------------------
 
-error_t fill_line_array (asm_context_t* asm_context)
+asm_error_t fill_line_array (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context                          != NULL);
     DEBUG_ASSERT (asm_context->parsed_lines.line_array != NULL);
@@ -124,7 +130,7 @@ error_t fill_line_array (asm_context_t* asm_context)
 
 //--------------------------------------------------------------------------------
 
-error_t asm_destroy (asm_context_t* asm_context)
+asm_error_t asm_destroy (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context                                  != NULL);
     DEBUG_ASSERT (asm_context->bytecode_container.bytecode     != NULL);

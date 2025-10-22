@@ -42,12 +42,12 @@ void reg_arg_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t op
 
     if (strcmp (tmp, "REG") != 0 || read_arg_count != 2)
     {
-        fprintf (stderr, "UNKNOWN COMMAND in %s:%d %s", __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (ASM_ERR_UNKNOWN_REG_NAME);
     }
 
     asm_context->bytecode_container.bytecode[(*pos)++] = operation;
 
-    asm_context->bytecode_container.bytecode[(*pos)++] = register_num;
+    asm_context->bytecode_container.bytecode[(*pos)++] = register_num - 1;
 
     asm_context->bytecode_container.num_commands++;
 
@@ -76,16 +76,16 @@ void fill_labels (asm_context_t* asm_context, int* pos, int i, asm_operation_t o
 
 //--------------------------------------------------------------------------------
 
-void upsize_fixup_list_if_need (asm_context_t* asm_context)
+void upsize_fixup_context_if_need (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context                              != NULL);
-    DEBUG_ASSERT (asm_context->fixup_list.fixup_table      != NULL);
+    DEBUG_ASSERT (asm_context->fixup_context.fixup_table      != NULL);
 
-    if (asm_context->fixup_list.fixup_count == asm_context->fixup_list.fixup_capacity - 1)
+    if (asm_context->fixup_context.fixup_count == asm_context->fixup_context.fixup_capacity - 1)
     {
-        asm_context->fixup_list.fixup_table = (fixup_t*)realloc (asm_context->fixup_list.fixup_table, asm_context->fixup_list.fixup_capacity * 2);
+        asm_context->fixup_context.fixup_table = (fixup_t*)realloc (asm_context->fixup_context.fixup_table, asm_context->fixup_context.fixup_capacity * 2);
 
-        asm_context->fixup_list.fixup_capacity = asm_context->fixup_list.fixup_capacity * 2; 
+        asm_context->fixup_context.fixup_capacity = asm_context->fixup_context.fixup_capacity * 2; 
     }
 }
 
@@ -109,12 +109,12 @@ void ram_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operat
 
     if (strcmp (tmp, "REG") != 0 || opening_bracket != '[' || closing_bracket != ']')
     {
-        fprintf (stderr, "UNKNOWN COMMAND in %s:%d %s", __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (ASM_ERR_UNKNOWN_REG_NAME);
     }
 
     asm_context->bytecode_container.bytecode[(*pos)++] = operation;
 
-    asm_context->bytecode_container.bytecode[(*pos)++] = register_num;
+    asm_context->bytecode_container.bytecode[(*pos)++] = register_num - 1;
 
     asm_context->bytecode_container.num_commands++;
 
@@ -151,7 +151,7 @@ void jmp_core_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t o
 
     asm_context->bytecode_container.bytecode[(*pos)++] = operation;
 
-    fill_fixup_list (asm_context, pos, input_label_num);
+    fill_fixup_context (asm_context, pos, input_label_num);
 
     asm_context->bytecode_container.bytecode[(*pos)++] = -1;
 
@@ -162,16 +162,16 @@ void jmp_core_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t o
 
 //--------------------------------------------------------------------------------
 
-void fill_fixup_list (asm_context_t* asm_context, int* pos, int input_label_num)
+void fill_fixup_context (asm_context_t* asm_context, int* pos, int input_label_num)
 {
-    DEBUG_ASSERT (asm_context                         != NULL);
-    DEBUG_ASSERT (asm_context->fixup_list.fixup_table != NULL);
+    DEBUG_ASSERT (asm_context                            != NULL);
+    DEBUG_ASSERT (asm_context->fixup_context.fixup_table != NULL);
 
-    upsize_fixup_list_if_need (asm_context);
+    upsize_fixup_context_if_need (asm_context);
 
-    asm_context->fixup_list.fixup_table[asm_context->fixup_list.fixup_count].index = *pos;
+    asm_context->fixup_context.fixup_table[asm_context->fixup_context.fixup_count].index = *pos;
 
-    asm_context->fixup_list.fixup_table[asm_context->fixup_list.fixup_count++].label_num = input_label_num;
+    asm_context->fixup_context.fixup_table[asm_context->fixup_context.fixup_count++].label_num = input_label_num;
 }
 
 //--------------------------------------------------------------------------------

@@ -5,12 +5,12 @@
 void fixup_labels (asm_context_t* asm_context)
 {
     DEBUG_ASSERT (asm_context                          != NULL);
-    DEBUG_ASSERT (asm_context->fixup_list.fixup_table  != NULL);
+    DEBUG_ASSERT (asm_context->fixup_context.fixup_table  != NULL);
 
-    for (int i = 0; i < asm_context->fixup_list.fixup_count; i++)
+    for (int i = 0; i < asm_context->fixup_context.fixup_count; i++)
     {
-        int label_number = asm_context->fixup_list.fixup_table[i].label_num;
-        int label_index  = asm_context->fixup_list.fixup_table[i].index;
+        int label_number = asm_context->fixup_context.fixup_table[i].label_num;
+        int label_index  = asm_context->fixup_context.fixup_table[i].index;
 
         int new_pointer  = asm_context->labels[label_number - 1];
 
@@ -28,7 +28,7 @@ void assemble (asm_context_t* asm_context)
 
     fixup_t* fixup_array = (fixup_t*)calloc (fixup_array_size, sizeof (fixup_t));
 
-    asm_context->fixup_list = {.fixup_table = fixup_array, .fixup_capacity = fixup_array_size};
+    asm_context->fixup_context = {.fixup_table = fixup_array, .fixup_capacity = fixup_array_size};
     
     for (int i = 0, pos = 0; i < asm_context->parsed_lines.num_lines; i++)
     {
@@ -81,7 +81,7 @@ int check_is_line_empty (asm_context_t* asm_context, int i)
     {
         if (isalpha (str[j]) || str[j] == ':')
             return false;
-        if (str[j] == '\n' || str[j] == ';' || str[j] == EOF)
+        if (str[j] == '\n' || str[j] == ';' || str[j] == '\0')
             return true;
         j++;
     }

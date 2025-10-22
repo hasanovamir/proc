@@ -9,10 +9,10 @@
 
 //————————————————————————————————————————————————————————————————————————————————
 
-int get_file_size (const char* file_name);
+long long int get_file_size (const char* file_name);
 
 //————————————————————————————————————————————————————————————————————————————————
-
+#define N_DEBUG
 #ifndef N_DEBUG
 #define DEBUG_ASSERT(cond)\
 if (!cond)\
@@ -21,7 +21,7 @@ if (!cond)\
     exit(1);\
 }
 #else
-#define DEBUG_ASSERT() 
+#define DEBUG_ASSERT(cond) ; 
 #endif //N_DEBUG
 
 //————————————————————————————————————————————————————————————————————————————————

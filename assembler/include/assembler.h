@@ -22,16 +22,16 @@ const int labels_size = 20;
 
 struct line_arr_t
 {
-    int    num_lines;
-    char** line_array;
+    long long num_lines;
+    char**    line_array;
 };
 
 //————————————————————————————————————————————————————————————————————————————————
 
 struct buffer_t
 {
-    int   buffer_size;
-    char* source_code_array;
+    long long buffer_size;
+    char*     source_code_array;
 };
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -53,11 +53,11 @@ struct fixup_t
 
 //————————————————————————————————————————————————————————————————————————————————
 
-struct fixup_list_t
+struct fixup_context_t
 {
     fixup_t* fixup_table;
-    int   fixup_count;
-    int   fixup_capacity;
+    int      fixup_count;
+    int      fixup_capacity;
 };
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -67,7 +67,7 @@ struct asm_context_t
     buffer_t             source_buffer;
     line_arr_t           parsed_lines;
     bytecode_container_t bytecode_container;
-    fixup_list_t         fixup_list;
+    fixup_context_t      fixup_context;
     int                  labels[labels_size];
     const char*          read_file_name;
     const char*          write_file_name;
@@ -85,8 +85,8 @@ typedef enum
     ASM_ERR_INVALID_SCAN_SYM = 5,
     ASM_ERR_OPEN_WRITE_FILE  = 6,
     ASM_ERR_UNKNOWN_REG_NAME = 7,
-    ASM_INCORRECT_FILE_NUM   = 8,
-} error_t;
+    ASM_INCORRECT_FILE_NAME  = 8,
+} asm_error_t;
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -184,30 +184,30 @@ const oper_name_and_idx_t oper_name_and_idx[] =
 
 //————————————————————————————————————————————————————————————————————————————————
 
-const char*     error_code_to_string      (error_t status            );
-asm_operation_t get_oper_idx              (const char* input_oper    );
-error_t         allocate_line_arr         (asm_context_t* asm_context);
-error_t         count_n_lines             (asm_context_t* asm_context);
-error_t         fill_line_array           (asm_context_t* asm_context);
-void            assemble                  (asm_context_t* asm_context);
-error_t         asm_destroy               (asm_context_t* asm_context);
-error_t         allocate_bytecode_array   (asm_context_t* asm_context);
-error_t         read_source_code             (asm_context_t* asm_context);
-error_t         write_bytecode            (asm_context_t* asm_context);
-void            fixup_labels              (asm_context_t* asm_context);
-void            upsize_fixup_list_if_need (asm_context_t* asm_context);
-int             check_is_line_empty       (asm_context_t* asm_context, int i);
-error_t         allocate_el_arr           (asm_context_t* asm_context, int argc, char** argv);
+const char*     error_code_to_string         (asm_error_t status        );
+asm_operation_t get_oper_idx                 (const char* input_oper    );
+asm_error_t     allocate_line_arr            (asm_context_t* asm_context);
+asm_error_t     count_n_lines                (asm_context_t* asm_context);
+asm_error_t     fill_line_array              (asm_context_t* asm_context);
+void            assemble                     (asm_context_t* asm_context);
+asm_error_t     asm_destroy                  (asm_context_t* asm_context);
+asm_error_t     allocate_bytecode_array      (asm_context_t* asm_context);
+asm_error_t     read_source_code             (asm_context_t* asm_context);
+asm_error_t     write_bytecode               (asm_context_t* asm_context);
+void            fixup_labels                 (asm_context_t* asm_context);
+void            upsize_fixup_context_if_need (asm_context_t* asm_context);
+int             check_is_line_empty          (asm_context_t* asm_context, int i);
+asm_error_t     allocate_el_arr              (asm_context_t* asm_context, int argc, char** argv);
 
 //————————————————————————————————————————————————————————————————————————————————
 
-void push_op         (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
-void fill_labels     (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
-void ram_op          (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
-void no_arg_op       (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
-void reg_arg_op      (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
-void jmp_core_op     (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
-void fill_fixup_list (asm_context_t* asm_context, int* pos, int input_label_num             );
+void push_op            (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void fill_labels        (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void ram_op             (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void no_arg_op          (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void reg_arg_op         (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void jmp_core_op        (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
+void fill_fixup_context (asm_context_t* asm_context, int* pos, int input_label_num    );
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -239,6 +239,7 @@ void (* const operations_table[FUNC_COUNT])(asm_context_t* asm_context, int* pos
         [FILL_LABELS] = &fill_labels   };
 
 //————————————————————————————————————————————————————————————————————————————————
+#define N_DEBUG
 
 #ifndef N_DEBUG
 #define DEBUG_ASSERT(cond)\
@@ -248,7 +249,7 @@ if (!cond)\
     exit(1);\
 }
 #else
-#define DEBUG_ASSERT() 
+#define DEBUG_ASSERT(cond) ;
 #endif //N_DEBUG
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -256,6 +257,11 @@ if (!cond)\
 #define ERRCASE(enum)\
     case enum:\
         return #enum;\
+
+//————————————————————————————————————————————————————————————————————————————————
+
+#define PRINTERR(str)\
+fprintf (stderr, "%s in %s:%d in %s", #str, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 //————————————————————————————————————————————————————————————————————————————————
 
