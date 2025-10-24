@@ -8,15 +8,14 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#include <stdbool.h>
 
 //————————————————————————————————————————————————————————————————————————————————
 
 typedef int spu_data_t;
 
-const int fixup_array_size = 20;
+const int   fixup_array_size = 20;
 
-const int labels_size = 20;
+const int   labels_size      = 20;
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -86,6 +85,7 @@ typedef enum
     ASM_ERR_OPEN_WRITE_FILE  = 6,
     ASM_ERR_UNKNOWN_REG_NAME = 7,
     ASM_INCORRECT_FILE_NAME  = 8,
+    ASM_ERR_UNKNOWN_COMMAND  = 9,
 } asm_error_t;
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -117,6 +117,7 @@ typedef enum
     POPM  = 21,
     DRAW  = 22,
     MEOW  = 23,
+    DBA   = 24,
     FILL_LABELS,
     FUNC_COUNT,
 } asm_operation_t;
@@ -146,58 +147,35 @@ typedef enum
 
 //————————————————————————————————————————————————————————————————————————————————
 
-struct oper_name_and_idx_t
+struct inf_about_oper_t
 {
     const char*     name;
     asm_operation_t idx;
+    long long       hash;
 };
 
 //————————————————————————————————————————————————————————————————————————————————
 
-const oper_name_and_idx_t oper_name_and_idx[] = 
-{
-    {"PUSH" , PUSH },
-    {"OUT"  , OUT  },
-    {"ADD"  , ADD  },
-    {"SUB"  , SUB  },
-    {"MUL"  , MUL  },
-    {"DIV"  , DIV  },
-    {"SQRT" , SQRT },
-    {"HLT"  , HLT  },
-    {"IN"   , IN   },
-    {"JMP"  , JMP  },
-    {"JE"   , JE   },
-    {"JNE"  , JNE  },
-    {"JA"   , JA   },
-    {"JAE"  , JAE  },
-    {"JB"   , JB   },
-    {"JBE"  , JBE  },
-    {"CALL" , CALL },
-    {"RET"  , RET  },
-    {"PUSHR", PUSHR},
-    {"POPR" , POPR },
-    {"PUSHM", PUSHM},
-    {"POPM" , POPM },
-    {"DRAW" , DRAW },
-    {"MEOW" , MEOW }
-};
+extern inf_about_oper_t inf_about_oper[];
 
 //————————————————————————————————————————————————————————————————————————————————
 
-const char*     error_code_to_string         (asm_error_t status        );
-asm_operation_t get_oper_idx                 (const char* input_oper    );
-asm_error_t     allocate_line_arr            (asm_context_t* asm_context);
+asm_error_t     asm_init                     (asm_context_t* asm_context , int argc, char** argv);
+asm_error_t     init_source_code_buffer      (asm_context_t* asm_context);
+asm_error_t     init_line_arr                (asm_context_t* asm_context);
+asm_error_t     write_bytecode               (asm_context_t* asm_context);
 asm_error_t     count_n_lines                (asm_context_t* asm_context);
 asm_error_t     fill_line_array              (asm_context_t* asm_context);
-void            assemble                     (asm_context_t* asm_context);
 asm_error_t     asm_destroy                  (asm_context_t* asm_context);
-asm_error_t     allocate_bytecode_array      (asm_context_t* asm_context);
+asm_error_t     init_bytecode_buffer         (asm_context_t* asm_context);
 asm_error_t     read_source_code             (asm_context_t* asm_context);
-asm_error_t     write_bytecode               (asm_context_t* asm_context);
+asm_error_t     assemble                     (asm_context_t* asm_context);
+asm_operation_t get_oper_idx                 (long long      input_hash );
 void            fixup_labels                 (asm_context_t* asm_context);
 void            upsize_fixup_context_if_need (asm_context_t* asm_context);
-int             check_is_line_empty          (asm_context_t* asm_context, int i);
-asm_error_t     allocate_el_arr              (asm_context_t* asm_context, int argc, char** argv);
+const char*     error_code_to_string         (asm_error_t    status     );
+long long       count_hash                   (const char*    string     );
+int             comp                         (const void* input_par_1, const void* input_par_2);
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -207,36 +185,39 @@ void ram_op             (asm_context_t* asm_context, int* pos, int i, asm_operat
 void no_arg_op          (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
 void reg_arg_op         (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
 void jmp_core_op        (asm_context_t* asm_context, int* pos, int i, asm_operation_t operation);
-void fill_fixup_context (asm_context_t* asm_context, int* pos, int input_label_num    );
+void fill_fixup_context (asm_context_t* asm_context, int* pos, int input_label_num             );
 
 //————————————————————————————————————————————————————————————————————————————————
 
 void (* const operations_table[FUNC_COUNT])(asm_context_t* asm_context, int* pos, int i, asm_operation_t operation) = 
-    {   [PUSH]        = &push_op,
-        [OUT]         = &no_arg_op,
-        [ADD]         = &no_arg_op,
-        [SUB]         = &no_arg_op,
-        [MUL]         = &no_arg_op,
-        [DIV]         = &no_arg_op,
-        [SQRT]        = &no_arg_op,
-        [HLT]         = &no_arg_op,
-        [IN]          = &no_arg_op,
-        [JMP]         = &jmp_core_op,
-        [JE]          = &jmp_core_op,
-        [JNE]         = &jmp_core_op,
-        [JA]          = &jmp_core_op,
-        [JAE]         = &jmp_core_op,
-        [JB]          = &jmp_core_op,
-        [JBE]         = &jmp_core_op,
-        [CALL]        = &jmp_core_op,
-        [RET]         = &no_arg_op,
-        [PUSHR]       = &reg_arg_op,
-        [POPR]        = &reg_arg_op,
-        [PUSHM]       = &ram_op,
-        [POPM]        = &ram_op,
-        [DRAW]        = &no_arg_op,
-        [MEOW]        = &no_arg_op,
-        [FILL_LABELS] = &fill_labels   };
+{   
+    [PUSH]        = &push_op,
+    [OUT]         = &no_arg_op,
+    [ADD]         = &no_arg_op,
+    [SUB]         = &no_arg_op,
+    [MUL]         = &no_arg_op,
+    [DIV]         = &no_arg_op,
+    [SQRT]        = &no_arg_op,
+    [HLT]         = &no_arg_op,
+    [IN]          = &no_arg_op,
+    [JMP]         = &jmp_core_op,
+    [JE]          = &jmp_core_op,
+    [JNE]         = &jmp_core_op,
+    [JA]          = &jmp_core_op,
+    [JAE]         = &jmp_core_op,
+    [JB]          = &jmp_core_op,
+    [JBE]         = &jmp_core_op,
+    [CALL]        = &jmp_core_op,
+    [RET]         = &no_arg_op,
+    [PUSHR]       = &reg_arg_op,
+    [POPR]        = &reg_arg_op,
+    [PUSHM]       = &ram_op,
+    [POPM]        = &ram_op,
+    [DRAW]        = &no_arg_op,
+    [MEOW]        = &no_arg_op,
+    [DBA]         = &no_arg_op,
+    [FILL_LABELS] = &fill_labels
+};
 
 //————————————————————————————————————————————————————————————————————————————————
 #define N_DEBUG

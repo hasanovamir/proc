@@ -11,17 +11,17 @@ spu_err_t spu_execute_instructions (spu_context_t* spu_context)
     for (int pos = 0; pos < spu_context->bytecode_size; pos++)
     {
         int idx = (spu_context->bytecode)[pos];
-
+        
         if (idx == HLT)
         {
             stack_destroy (&spu_context->return_labels);
             return SPU_SUCCESS;
         }
-
+        
         spu_err_t status = commands_table[idx](spu_context, &pos);
-
+        
         if (status)
-            return status;
+            return status; 
     }
 
     PRINTERR (NO HALT IN COMMANDS);

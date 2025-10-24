@@ -1,4 +1,3 @@
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "stack.h"
 #include "SPU.h"
 
@@ -14,8 +13,7 @@ spu_err_t spu_push (spu_context_t* spu_context, int* pos)
 
     if (stack_push (&spu_context->stk, spu_context->bytecode[*pos]) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
             
         return SPU_ALLOCATION_ERR;
     }
@@ -39,16 +37,14 @@ spu_err_t spu_out (spu_context_t* spu_context, int* pos)
 
     if ((status = stack_pop (&spu_context->stk, &value)) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
 
     if (status == STACK_NO_EL_TO_POP)
     {
-        fprintf(stderr, "NO_EL_TO_POP in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_NO_EL_TO_POP);
 
         return SPU_NO_EL_TO_POP;
     }
@@ -74,8 +70,7 @@ spu_err_t spu_add (spu_context_t* spu_context, int* pos)
 
     if (stack_push (&spu_context->stk, last_el + second_last_el) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -99,8 +94,7 @@ spu_err_t spu_sub (spu_context_t* spu_context, int* pos)
 
     if (stack_push (&spu_context->stk, second_last_el - last_el) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -124,8 +118,7 @@ spu_err_t spu_div (spu_context_t* spu_context, int* pos)
 
     if (stack_push (&spu_context->stk, second_last_el / last_el) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -149,8 +142,7 @@ spu_err_t spu_mul (spu_context_t* spu_context, int* pos)
 
     if (stack_push (&spu_context->stk, last_el * second_last_el) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -172,8 +164,7 @@ spu_err_t spu_sqrt (spu_context_t* spu_context, int* pos)
 
     if (stack_pop (&spu_context->stk, &last_el) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -182,8 +173,7 @@ spu_err_t spu_sqrt (spu_context_t* spu_context, int* pos)
 
     if (stack_push (&spu_context->stk, last_el) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -207,8 +197,7 @@ spu_err_t spu_in (spu_context_t* spu_context, int* pos)
 
     if (stack_push (&spu_context->stk, new_last_el) == STACK_ALLOCATION_ERR)
     {
-        fprintf(stderr, "SPU_ALLOCATION_ERR in %s:%d func:%s\n",
-            __FILE__, __LINE__, __PRETTY_FUNCTION__);
+        PRINTERR (SPU_ALLOCATION_ERR);
 
         return SPU_ALLOCATION_ERR;
     }
@@ -531,14 +520,20 @@ spu_err_t spu_popm (spu_context_t* spu_context, int* pos)
 
 spu_err_t spu_draw (spu_context_t* spu_context, int* pos)
 {
-    for (int y = 0; y < (int)sqrt (ram_size); y++)
+    int* mem = spu_context->ram;
+    int  element = 0;
+    (void)pos;
+
+    for (int y = 0; y < sqrt_ram_size; y++)
     {
-        for (int x = 0; x < (int)sqrt (ram_size); x++)
+        for (int x = 0; x < sqrt_ram_size; x++)
         {
-            if (*(spu_context->ram + y * (int)sqrt (ram_size) + x) == 0)
-                printf (COLOR_RED "|%d|" COLOR_RESET, *(spu_context->ram + y * (int)sqrt (ram_size) + x));
+            element = *(mem + y * sqrt_ram_size + x);
+
+            if (element == 0)
+                printf (COLOR_RED "|%d|" COLOR_RESET, element);
             else
-                printf (COLOR_GREEN "|%d|" COLOR_RESET, *(spu_context->ram + y * (int)sqrt (ram_size) + x));
+                printf (COLOR_GREEN "|%d|" COLOR_RESET, element);
         }
         printf ("\n");
     }
@@ -550,9 +545,50 @@ spu_err_t spu_draw (spu_context_t* spu_context, int* pos)
 
 spu_err_t spu_meow (spu_context_t* spu_context, int* pos)
 {
+    DEBUG_ASSERT (spu_context != NULL);
+
+    (void)pos;
+
     printf ("MEOW");
 
     spu_context->num_completed_commands++;
+
+    return SPU_SUCCESS;
+}
+
+//--------------------------------------------------------------------------------
+
+spu_err_t spu_dba (spu_context_t* spu_context, int* pos)
+{
+    DEBUG_ASSERT (spu_context      != NULL);
+    DEBUG_ASSERT (spu_context->ram != NULL);
+
+    (void)pos;
+
+    char frame[3492] = "";
+
+    int* mem = spu_context->ram;
+    int  element   = 0;
+    int  frame_pos = 0;
+
+    frame[frame_pos++] = '\n';
+
+    for (int y = 0; y < frame_height; y++)
+    {
+        for (int x = 0; x < frame_width; x++)
+        {
+            element = *(mem + y * frame_width + x);
+
+            frame[frame_pos++] = (char) element;
+        }
+
+        frame[frame_pos++] = '\n';
+        
+    }
+
+    fwrite (frame, 1, ram_size + 1, stdout);
+
+    usleep (frame_duration);
 
     return SPU_SUCCESS;
 }

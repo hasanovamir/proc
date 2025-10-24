@@ -1,5 +1,9 @@
 #ifndef SPU_h
-#define SPU_h // make spu damp
+#define SPU_h
+
+//————————————————————————————————————————————————————————————————————————————————
+
+#include <unistd.h>
 
 //————————————————————————————————————————————————————————————————————————————————
 
@@ -9,32 +13,32 @@
 
 //————————————————————————————————————————————————————————————————————————————————
 
+const int fps            = 30;
+const int frame_width    = 96;
+const int frame_height   = 36;
+const int frame_duration = 1000000 / fps;
+
+//————————————————————————————————————————————————————————————————————————————————
+
+typedef   stack_val_t spu_data_t;
+
 const int spu_stack_size = 100;
-
 const int spu_ret_labels_stack_size = 20;
-
-typedef stack_val_t spu_data_t;
-
 const int reg_capacity = 16;
-
-const int ram_size = 441;
+const int ram_size = frame_height * (frame_width + 1);
+const int sqrt_ram_size = (int) sqrt (ram_size);
 
 //————————————————————————————————————————————————————————————————————————————————
 
 struct spu_context_t
 {
-    int         bytecode_size;
-    int         num_completed_commands;
-
+    long long   bytecode_size;
+    long long   num_completed_commands;
     spu_data_t* bytecode;
-
     stack_t     stk;
     stack_t     return_labels;
-
     const char* file_name;
-
     int         reg[reg_capacity];
-    
     spu_data_t* ram;
 };
 
@@ -66,6 +70,7 @@ typedef enum
     POPM  = 21,
     DRAW  = 22,
     MEOW  = 23,
+    DBA   = 24,
     FUNC_COUNT,
 } spu_operation_t;
 
@@ -73,23 +78,23 @@ typedef enum
 
 typedef enum
 {
-    SPU_SUCCESS        = 0,
-    SPU_ALLOCATION_ERR = 1,
-    SPU_OPEN_FILE_ERR  = 2,
-    SPU_FREAD_ERR      = 3,
-    SPU_LACK_OF_HALT   = 4,
-    SPU_SCAN_ERR       = 5,
-    SPU_NO_EL_TO_POP   = 6,
-    SPU_LACK_OF_FILE   = 7,
+    SPU_SUCCESS             = 0,
+    SPU_ALLOCATION_ERR      = 1,
+    SPU_OPEN_FILE_ERR       = 2,
+    SPU_FREAD_ERR           = 3,
+    SPU_LACK_OF_HALT        = 4,
+    SPU_SCAN_ERR            = 5,
+    SPU_NO_EL_TO_POP        = 6,
+    SPU_LACK_OF_FILE        = 7,
     SPU_INCORRECT_FILE_SIZE = 8,
 } spu_err_t;
 
 //————————————————————————————————————————————————————————————————————————————————
 
+const char* error_spu_code_to_string  (spu_err_t status          );
 spu_err_t   allocate_bytecode_array   (spu_context_t* spu_context);
 spu_err_t   read_bytecode             (spu_context_t* spu_context);
 spu_err_t   spu_execute_instructions  (spu_context_t* spu_context);
-const char* error_spu_code_to_string  (spu_err_t status          );
 spu_err_t   spu_destroy               (spu_context_t* spu_context);
 spu_err_t   spu_init                  (spu_context_t* spu_context, int argc, char** argv);
 
@@ -118,34 +123,38 @@ spu_err_t spu_pushm (spu_context_t* spu_context, int* pos);
 spu_err_t spu_popm  (spu_context_t* spu_context, int* pos);
 spu_err_t spu_draw  (spu_context_t* spu_context, int* pos);
 spu_err_t spu_meow  (spu_context_t* spu_context, int* pos);
+spu_err_t spu_dba   (spu_context_t* spu_context, int* pos);
 
 //————————————————————————————————————————————————————————————————————————————————
 
 spu_err_t (* const commands_table[FUNC_COUNT])(spu_context_t* spu_context_t, int* pos) = 
-    {   [PUSH]    = &spu_push,
-        [OUT]     = &spu_out,
-        [ADD]     = &spu_add,
-        [SUB]     = &spu_sub,
-        [MUL]     = &spu_mul,
-        [DIV]     = &spu_div,
-        [SQRT]    = &spu_sqrt,
-        [HLT]     = NULL,
-        [IN]      = &spu_in,
-        [JMP]     = &spu_jmp,
-        [JE]      = &spu_je,
-        [JNE]     = &spu_jne,
-        [JA]      = &spu_ja,
-        [JAE]     = &spu_jae,
-        [JB]      = &spu_jb,
-        [JBE]     = &spu_jbe,
-        [CALL]    = &spu_call,
-        [RET]     = &spu_ret,
-        [PUSHR]   = &spu_pushr,
-        [POPR]    = &spu_popr,
-        [PUSHM]   = &spu_pushm,
-        [POPM]    = &spu_popm,
-        [DRAW]    = &spu_draw,
-        [MEOW]    = &spu_meow   };
+{   
+    [PUSH]    = &spu_push,
+    [OUT]     = &spu_out,
+    [ADD]     = &spu_add,
+    [SUB]     = &spu_sub,
+    [MUL]     = &spu_mul,
+    [DIV]     = &spu_div,
+    [SQRT]    = &spu_sqrt,
+    [HLT]     = NULL,
+    [IN]      = &spu_in,
+    [JMP]     = &spu_jmp,
+    [JE]      = &spu_je,
+    [JNE]     = &spu_jne,
+    [JA]      = &spu_ja,
+    [JAE]     = &spu_jae,
+    [JB]      = &spu_jb,
+    [JBE]     = &spu_jbe,
+    [CALL]    = &spu_call,
+    [RET]     = &spu_ret,
+    [PUSHR]   = &spu_pushr,
+    [POPR]    = &spu_popr,
+    [PUSHM]   = &spu_pushm,
+    [POPM]    = &spu_popm,
+    [DRAW]    = &spu_draw,
+    [MEOW]    = &spu_meow,
+    [DBA]     = &spu_dba,   
+};
 
 //————————————————————————————————————————————————————————————————————————————————
 

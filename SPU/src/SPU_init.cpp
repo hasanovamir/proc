@@ -52,7 +52,7 @@ spu_err_t allocate_bytecode_array (spu_context_t* spu_context)
  
     spu_context->bytecode_size = get_file_size (spu_context->file_name);
 
-    if ((spu_context->bytecode_size % 4) != 0)
+    if ((spu_context->bytecode_size % sizeof (spu_data_t)) != 0)
     {
         PRINTERR (SPU_INCORRECT_FILE_SIZE);
 

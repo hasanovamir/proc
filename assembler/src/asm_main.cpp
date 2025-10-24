@@ -6,7 +6,14 @@ int main (int argc, char* argv[])
 {
     asm_context_t asm_context = {};
 
-    if (allocate_el_arr (&asm_context, argc, argv))
+    if (asm_init(&asm_context, argc, argv))
+    {
+        asm_destroy (&asm_context);
+
+        return EXIT_FAILURE;
+    }
+
+    if (init_source_code_buffer (&asm_context))
     {
         asm_destroy (&asm_context);
 
@@ -20,14 +27,14 @@ int main (int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (allocate_line_arr (&asm_context))
+    if (init_line_arr (&asm_context))
     {
         asm_destroy (&asm_context);
 
         return EXIT_FAILURE;
     }
 
-    if (allocate_bytecode_array (&asm_context))
+    if (init_bytecode_buffer (&asm_context))
     {
         asm_destroy (&asm_context);
 
