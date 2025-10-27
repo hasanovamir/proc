@@ -30,6 +30,7 @@ struct line_arr_t
 struct buffer_t
 {
     long long buffer_size;
+    long long read_size;
     char*     source_code_array;
 };
 
@@ -175,6 +176,7 @@ void            fixup_labels                 (asm_context_t* asm_context);
 void            upsize_fixup_context_if_need (asm_context_t* asm_context);
 const char*     error_code_to_string         (asm_error_t    status     );
 long long       count_hash                   (const char*    string     );
+int             check_is_line_empty          (const char*    string     );
 int             comp                         (const void* input_par_1, const void* input_par_2);
 
 //————————————————————————————————————————————————————————————————————————————————

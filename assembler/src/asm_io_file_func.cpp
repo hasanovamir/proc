@@ -9,7 +9,7 @@ asm_error_t read_source_code (asm_context_t* asm_context)
 
     const char* file_name = asm_context->read_file_name;
 
-    FILE* file = fopen (file_name, "r");
+    FILE* file = fopen (file_name, "rb");
 
     if (file == NULL)
     {
@@ -18,8 +18,8 @@ asm_error_t read_source_code (asm_context_t* asm_context)
         return ASM_ERR_OPEN_READ_FILE;
     }
    
-    fread (asm_context->source_buffer.source_code_array, sizeof (char), asm_context->source_buffer.buffer_size, file);
-
+    asm_context->source_buffer.read_size = fread (asm_context->source_buffer.source_code_array, sizeof (char), asm_context->source_buffer.buffer_size, file);
+    
     count_n_lines (asm_context);
     
     fclose (file);

@@ -68,7 +68,7 @@ spu_err_t allocate_bytecode_array (spu_context_t* spu_context)
         return SPU_OPEN_FILE_ERR;
     }
 
-    spu_context->bytecode = (spu_data_t*)calloc (spu_context->bytecode_size, sizeof (spu_data_t));
+    spu_context->bytecode = (spu_data_t*)calloc (spu_context->bytecode_size + 1, sizeof (spu_data_t));
 
     if (spu_context->bytecode == NULL)
     {

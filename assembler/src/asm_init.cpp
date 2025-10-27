@@ -156,15 +156,20 @@ asm_error_t count_n_lines (asm_context_t* asm_context)
 
     int count = 0;
     char* tmp = asm_context->source_buffer.source_code_array;
+    char* end = asm_context->source_buffer.source_code_array + asm_context->source_buffer.read_size;
 
-    while (tmp != NULL)
+    while (tmp < end)
     {
         tmp = strchr (tmp, '\n');
 
-        if (tmp != NULL)
+        if (tmp != NULL && tmp < end)
         {
             count++;
             tmp++;
+        }
+        else
+        {
+            break;
         }
     }
 
@@ -177,41 +182,23 @@ asm_error_t count_n_lines (asm_context_t* asm_context)
 
 asm_error_t fill_line_array (asm_context_t* asm_context)
 {
-    DEBUG_ASSERT (asm_context                          != NULL);
-    DEBUG_ASSERT (asm_context->parsed_lines.line_array != NULL);
+    DEBUG_ASSERT(asm_context                          != NULL);
+    DEBUG_ASSERT(asm_context->parsed_lines.line_array != NULL);
 
     char* tmp = asm_context->source_buffer.source_code_array;
-
+    
     for (int i = 0; i < asm_context->parsed_lines.num_lines; i++)
     {
-        while (!isalpha (*tmp) && !(*tmp == ':'))
-        {
-            if (*tmp  == '\0')
-            {
-                asm_context->parsed_lines.num_lines--;
+        asm_context->parsed_lines.line_array[i] = tmp;
 
-                return ASM_SUCCESS;
-            }
+        tmp = strchr (tmp, '\n');
 
-            if (*tmp == '\n')
-                asm_context->parsed_lines.num_lines--;
-
-            if (*tmp == ';')
-            {
-                asm_context->parsed_lines.num_lines--;
-
-                tmp = strchr (tmp, '\n');
-            }
-
+        if (tmp != NULL)
             tmp++;
-        }
-
-        (asm_context->parsed_lines.line_array)[i]  = tmp;
-
-        tmp = strchr (tmp, '\n') + 1;
-
+        else
+            break;
     }
-
+    
     return ASM_SUCCESS;
 }
 

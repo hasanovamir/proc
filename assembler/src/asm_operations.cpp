@@ -88,7 +88,7 @@ void ram_op (asm_context_t* asm_context, int* pos, int i, asm_operation_t operat
     DEBUG_ASSERT (asm_context->parsed_lines.line_array     != NULL);
     DEBUG_ASSERT (asm_context->bytecode_container.bytecode != NULL);
 
-    char* ptr_to_arg = 1 + strchr (asm_context->parsed_lines.line_array[i], ']');
+    char* ptr_to_arg = - 1 + strchr (asm_context->parsed_lines.line_array[i], ']');
 
     int register_num = atoi (ptr_to_arg);
 

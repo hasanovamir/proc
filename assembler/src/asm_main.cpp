@@ -50,6 +50,8 @@ int main (int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    printf ("%s %d", asm_context.parsed_lines.line_array[asm_context.parsed_lines.num_lines], asm_context.parsed_lines.num_lines);
+
     asm_destroy (&asm_context);
 
     return EXIT_SUCCESS;

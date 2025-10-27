@@ -31,15 +31,19 @@ asm_error_t assemble (asm_context_t* asm_context)
 
     for (int i = 0, pos = 0; i < iteration_count; i++)
     {
-        if (((i + 1) * 100) % iteration_count == 0)
-            fprintf (stderr, "%d\n", ((i + 1) * 100) / iteration_count);
+        if (check_is_line_empty (asm_context->parsed_lines.line_array[i]))
+            continue;
 
         oper_hash = count_hash (asm_context->parsed_lines.line_array[i]);
         
         asm_operation_t idx = get_oper_idx (oper_hash);
 
         if (idx == ERR)
-            return ASM_ERR_UNKNOWN_COMMAND; 
+        {
+            fprintf (stderr, "line: %d ", i);
+
+            return ASM_ERR_UNKNOWN_COMMAND;
+        }
 
         operations_table[idx](asm_context, &pos, i, idx);
     }
@@ -75,14 +79,36 @@ long long count_hash (const char* string)
 {
     long long hash = 5381;
     int  i = 0;
-    char c = 0;
 
-    while (isalpha (c = string[i++]) || c == ':')
+    while (1)
     {
-        hash = ((hash << 5) + hash) + c;
+        if (string[i] == ':' || isalpha (string[i]))
+            break;
+        ++i;
+    }
+
+    while (isalpha (string[i]) || string[i] == ':')
+    {
+        hash = ((hash << 5) + hash) + string[i++];
     }
 
     return hash;
+}
+
+//--------------------------------------------------------------------------------
+
+int check_is_line_empty (const char* string)
+{
+    int i = 0;
+
+    while (1)
+    {
+        if (isalpha (string[i]) || string[i] == ':')
+            return 0;
+        if (string[i] == ';' || string[i] == '\0' || string[i] == '\n')
+            return 1;
+        i++;
+    }
 }
 
 //--------------------------------------------------------------------------------

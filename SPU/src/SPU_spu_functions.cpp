@@ -531,9 +531,9 @@ spu_err_t spu_draw (spu_context_t* spu_context, int* pos)
             element = *(mem + y * sqrt_ram_size + x);
 
             if (element == 0)
-                printf (COLOR_RED "|%d|" COLOR_RESET, element);
+                printf (COLOR_RED "|%c|" COLOR_RESET, element);
             else
-                printf (COLOR_GREEN "|%d|" COLOR_RESET, element);
+                printf (COLOR_GREEN "|%c|" COLOR_RESET, element);
         }
         printf ("\n");
     }
